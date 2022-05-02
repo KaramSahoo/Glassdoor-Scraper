@@ -1,23 +1,3 @@
-'''
-main.py
-----------
-Matthew Chatham
-June 6, 2018
-Given a company's landing page on Glassdoor and an output filename, scrape the
-following information about each employee review:
-Review date
-Employee position
-Employee location
-Employee status (current/former)
-Review title
-Number of helpful votes
-Pros text
-Cons text
-Advice to mgmttext
-Ratings for each of 5 categories
-Overall rating
-'''
-
 import time
 import pandas as pd
 from argparse import ArgumentParser
@@ -39,8 +19,7 @@ start = time.time()
 
 pp = pprint.PrettyPrinter(indent=4)
 
-DEFAULT_URL = ('https://www.glassdoor.com/Overview/Working-at-'
-               'Premise-Data-Corporation-EI_IE952471.11,35.htm')
+DEFAULT_URL = ('https://www.glassdoor.co.in/Overview/Working-at-Zoom-Video-Communications-EI_IE924644.11,36.htm')
 
 parser = ArgumentParser()
 parser.add_argument('-u', '--url',
@@ -183,14 +162,14 @@ def scrape(field, review, author):
             res = ""
         return res
 
-    # def scrape_advice(review):
-    #     try:
-    #         adv = review.find_element(by=By.CLASS_NAME, value="v2__EIReviewDetailsV2__clickable").click()
-    #         adv = adv.find_element(by=By.XPATH,value=".//span[@data-test='advice-management']")
-    #         res = adv.text
-    #     except Exception:
-    #         res = ""
-    #     return res
+    def scrape_advice(review):
+        try:
+            review.find_element(by=By.CLASS_NAME, value="v2__EIReviewDetailsV2__continueReading.v2__EIReviewDetailsV2__clickable.v2__EIReviewDetailsV2__newUiCta.mb").click()
+            adv = review.find_element(by=By.XPATH,value=".//span[@data-test='advice-management']")
+            res = adv.text
+        except Exception:
+            res = ""
+        return res
 
     def scrape_overall_rating(review):
         try:
@@ -269,7 +248,7 @@ def scrape(field, review, author):
         # scrape_helpful,
         scrape_pros,
         scrape_cons,
-        # scrape_advice,
+        scrape_advice,
         scrape_overall_rating,
         # scrape_work_life_balance,
         # scrape_culture_and_values,
@@ -328,8 +307,8 @@ def extract_from_page():
     for review in reviews:
         if not is_featured(review):
             data = extract_review(review)
-            pp.pprint(data)
             if data != None:
+                # pp.pprint(data)
                 # logger.info(f'Scraped data for "{data["review_title"]}"\({data["date"]})')
                 res.loc[idx[0]] = data
             else:
@@ -510,6 +489,7 @@ def main():
             break
 
     logger.info(f'Writing {len(res)} reviews to file {args.file}')
+    res["company_name"] = browser.find_element(by=By.ID, value='DivisionsDropdownComponent').text
     res.to_csv(args.file, index=False, encoding='utf-8')
 
     end = time.time()
